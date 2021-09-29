@@ -2,4 +2,4 @@
 
 export HOME=/home/lich
 
-exec setuidgid lich /usr/bin/ruby $HOME/.tmp/tg-script/tg.rb >> $HOME/.tg-script.run.log
+exec setuidgid lich /usr/bin/ruby $HOME/.tmp/tg-script/tg.rb >> $HOME/.tg-script.run.log 2>&1

@@ -73,14 +73,16 @@ class Tg
       r_msg = @msgs[last_extend_r_index]
       e_msg = @msgs[last_extend_index]
       if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 9
-        delete_msg last_extend_r_index
-        delete_msg last_extend_index
+        delete_msg last_extend_r_index 
         msg = @msgs[last_extend_index - 1]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media']  && 'unsupported' === msg['media']['type']
             delete_msg last_extend_index - 1
           end
         end
+        @msgs.each_with_index { |msg, i|
+          delete_msg i if extend_text === msg['text']
+        }
       end
     end
 
@@ -115,7 +117,7 @@ class Tg
     } if player_count < 5 && has_own && player_count_index != -1
 
 
-    if @msgs.last['text'].start_with?('游戏启动中')
+    if @msgs.last['text'] && @msgs.last['text'].start_with?('游戏启动中')
       @stdin << "fwd #{@msgs.last['to']['print_name']} #{STICKER_START}\n"
     end
   end
@@ -138,6 +140,7 @@ class Tg
   end
 
   def start
+    `pkill telegram-cli`
     @stdin, @stdout, @stderr, @wait_thr = Open3.popen3 CMD
 
     trap("SIGINT") { stop }
