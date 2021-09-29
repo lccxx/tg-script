@@ -80,7 +80,7 @@ class Tg
             delete_msg last_extend_index - 1
           end
         end
-        @msgs.each_with_index { |msg, i|
+        (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
           delete_msg i if extend_text === msg['text']
         }
       end
