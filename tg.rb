@@ -39,7 +39,7 @@ class Tg
   end
 
   def process(msg)
-    @msgs << msg if @msgs.find { |m| msg['id'] === m['id']  }.nil?
+    @msgs << msg if @msgs.find { |m| msg['id'] === m['id'] }.nil?
     @msgs.drop 1 if @msgs.size > MAX_QUEUE_SIZE
     save_msgs
 
