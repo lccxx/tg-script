@@ -68,6 +68,12 @@ class Tg
     if last_extend_index != -1 && last_extend_r_index != -1
       delete_msg last_extend_r_index
       delete_msg last_extend_index
+      msg = @msgs[last_extend_index - 1]
+      if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
+        if msg['media']  && 'unsupported' === msg['media']['type']
+          delete_msg last_extend_index - 1
+        end
+      end
     end
 
 
@@ -89,7 +95,7 @@ class Tg
     puts "player_count: #{player_count}, player_count_index: #{player_count_index}, has_own: #{has_own}"
 
     (player_count_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      break if @last_extend && Time.now - @last_extend < [5, 99][@extend_count % 2]
+      break if @last_extend && Time.now - @last_extend < [5, 29][@extend_count % 2]
 
       next if msg['from'] && 'Werewolf_Moderator' != msg['from']['print_name']
 
