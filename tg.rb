@@ -18,6 +18,8 @@ class Tg
     @last_extend = nil
     @extend_count = 0
 
+    @last_msg_at = nil
+
     load_msgs
   end
 
@@ -112,6 +114,13 @@ class Tg
     @stdin << "delete_msg #{msg['id']}\n"
   end
 
+  def check
+    stop if Time.now - @last_msg_at > 9
+    exit 1 if Time.now - @last_msg_at > 19
+
+    @stdin << "get_self\n"
+  end
+
   def stop
     @stdin << "quit\n"
     @stop = true
@@ -123,10 +132,18 @@ class Tg
     trap("SIGINT") { stop }
     trap("TERM") { stop }
 
+    Thread.new { loop {
+      break if @stop
+
+      sleep 5
+      check
+    } }
+
     loop {
       break if @stop
 
       puts line = @stdout.gets.strip
+      @last_msg_at = Time.now
 
       begin
 
