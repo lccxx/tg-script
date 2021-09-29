@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export HOME=/home/lich
+
+exec setuidgid lich /usr/bin/ruby $HOME/.tmp/tg-script/tg.rb >> $HOME/.tg-script.run.log
