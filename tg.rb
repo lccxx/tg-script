@@ -9,6 +9,8 @@ class Tg
   MSGS_FILENAME = "#{HOME}/.tg-script-msgs.json"
   MAX_QUEUE_SIZE = 9999
 
+  STICKER_START = '0500000080b97056c5020000000000004b04bccd8bf722a0'
+
   def initialize
     @stdin, @stdout, @stderr, @wait_thr = nil
 
@@ -68,12 +70,16 @@ class Tg
     }
 
     if last_extend_index != -1 && last_extend_r_index != -1
-      delete_msg last_extend_r_index
-      delete_msg last_extend_index
-      msg = @msgs[last_extend_index - 1]
-      if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
-        if msg['media']  && 'unsupported' === msg['media']['type']
-          delete_msg last_extend_index - 1
+      r_msg = @msgs[last_extend_r_index]
+      e_msg = @msgs[last_extend_index]
+      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 9
+        delete_msg last_extend_r_index
+        delete_msg last_extend_index
+        msg = @msgs[last_extend_index - 1]
+        if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
+          if msg['media']  && 'unsupported' === msg['media']['type']
+            delete_msg last_extend_index - 1
+          end
         end
       end
     end
@@ -107,6 +113,11 @@ class Tg
         @extend_count += 1
       end
     } if player_count < 5 && has_own && player_count_index != -1
+
+
+    if @msgs.last['text'].start_with?('游戏启动中')
+      @stdin << "fwd #{@msgs.last['to']['print_name']} #{STICKER_START}\n"
+    end
   end
 
   def delete_msg(i)
