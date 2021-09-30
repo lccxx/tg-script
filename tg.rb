@@ -117,10 +117,14 @@ class Tg
         @extend_count += 1
       end
     } if player_count < 5 && has_own && player_count_index != -1
+    
+    if player_count_index != -1
+      (0...player_count_index).to_a.reverse.each { |i| @msgs.delete_at i }
+    end
 
-
-    if @msgs.last['text'] && @msgs.last['text'].start_with?('游戏启动中')
-      @stdin << "fwd #{@msgs.last['to']['print_name']} #{STICKER_START}\n"
+    l_msg = msgs.last
+    if l_msg['text'] && l_msg['text'].start_with?('游戏启动中')
+      @stdin << "fwd #{l_msg['to']['print_name']} #{STICKER_START}\n"
     end
   end
 
