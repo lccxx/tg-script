@@ -59,6 +59,7 @@ class Tg
     last_extend_index = -1
     last_extend_r_index = -1
     (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+      break if /^游戏启动中/.match?(msg['text'])
       break if /游戏取消/.match?(msg['text'])
       if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
         if msg['media']  && 'unsupported' === msg['media']['type']
@@ -91,6 +92,7 @@ class Tg
     player_count_index = -1
     has_own = false
     (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+      break if /^游戏启动中/.match?(msg['text'])
       break if /游戏取消/.match?(msg['text'])
       if /在最近30秒内加入了游戏/.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
