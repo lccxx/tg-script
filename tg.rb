@@ -102,6 +102,11 @@ class Tg
         break player_count_index = i
       end
     }
+    
+    (player_count_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+      rs = /还剩 (\d+) 名玩家。/.match(msg['text'])
+      player_count = rs[1].to_i if rs && rs.size === 2
+    }
 
     msg = @msgs.last
 
