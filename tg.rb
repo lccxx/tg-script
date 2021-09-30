@@ -17,7 +17,7 @@ class Tg
     @stop = false
 
     @msgs = [ ]
-    @last_extend = nil
+    @last_extend = Time.at 0
     @extend_count = 0
 
     @last_msg_at = nil
@@ -108,7 +108,7 @@ class Tg
     puts "player_count: #{player_count}, player_count_index: #{player_count_index}, has_own: #{has_own}"
 
     if player_count < 5 && has_own && player_count_index != -1
-      if @last_extend && Time.now - @last_extend > [5, 29][@extend_count % 2]
+      if Time.now - @last_extend > [5, 29][@extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media']  && 'unsupported' === msg['media']['type']
             send(msg['to']['print_name'], extend_text)
