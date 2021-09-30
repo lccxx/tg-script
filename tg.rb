@@ -87,7 +87,6 @@ class Tg
       end
     end
 
-
     player_count = 0
     player_count_index = -1
     has_own = false
@@ -104,27 +103,28 @@ class Tg
       end
     }
 
+    msg = @msgs.last
+
     puts "player_count: #{player_count}, player_count_index: #{player_count_index}, has_own: #{has_own}"
 
-    (player_count_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      break if @last_extend && Time.now - @last_extend < [5, 29][@extend_count % 2]
-
-      next if msg['from'] && 'Werewolf_Moderator' != msg['from']['print_name']
-
-      if msg['media']  && 'unsupported' === msg['media']['type']
-        send(msg['to']['print_name'], extend_text)
-        @last_extend = Time.now
-        @extend_count += 1
+    if player_count < 5 && has_own && player_count_index != -1
+      if @last_extend && Time.now - @last_extend > [5, 29][@extend_count % 2]
+        if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
+          if msg['media']  && 'unsupported' === msg['media']['type']
+            send(msg['to']['print_name'], extend_text)
+            @last_extend = Time.now
+            @extend_count += 1
+          end
+        end
       end
-    } if player_count < 5 && has_own && player_count_index != -1
-    
+    end
+
     if player_count_index != -1
       (0...player_count_index).to_a.reverse.each { |i| @msgs.delete_at i }
     end
 
-    l_msg = @msgs.last
-    if l_msg['text'] && l_msg['text'].start_with?('游戏启动中')
-      @stdin << "fwd #{l_msg['to']['print_name']} #{STICKER_START}\n"
+    if msg['text'] && msg['text'].start_with?('游戏启动中')
+      @stdin << "fwd #{msg['to']['print_name']} #{STICKER_START}\n"
     end
   end
 
