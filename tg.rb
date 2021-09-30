@@ -122,7 +122,7 @@ class Tg
       (0...player_count_index).to_a.reverse.each { |i| @msgs.delete_at i }
     end
 
-    l_msg = msgs.last
+    l_msg = @msgs.last
     if l_msg['text'] && l_msg['text'].start_with?('游戏启动中')
       @stdin << "fwd #{l_msg['to']['print_name']} #{STICKER_START}\n"
     end
