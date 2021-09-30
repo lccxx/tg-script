@@ -103,10 +103,20 @@ class Tg
       end
     }
     
+    player_count_f_index = -1
     (player_count_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
       rs = /还剩 (\d+) 名玩家。/.match(msg['text'])
-      player_count = rs[1].to_i if rs && rs.size === 2
-    }
+      if rs && rs.size === 2
+        player_count = rs[1].to_i
+        break player_count_f_index = i
+      end
+    } if player_count_index != -1
+    
+    (player_count_f_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+      if /在最近30秒内加入了游戏/.match?(msg['text'])
+        player_count += msg['text'].scan(', ').count + 1
+      end
+    } if player_count_f_index != -1
 
     msg = @msgs.last
 
