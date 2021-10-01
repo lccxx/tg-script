@@ -73,7 +73,7 @@ class Tg
     if last_extend_index != -1 && last_extend_r_index != -1
       r_msg = @msgs[last_extend_r_index]
       e_msg = @msgs[last_extend_index]
-      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 9
+      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 19
         delete_msg last_extend_r_index 
         msg = @msgs[last_extend_index - 1]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
