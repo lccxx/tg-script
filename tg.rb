@@ -4,9 +4,10 @@ require 'json'
 require 'open3'
 
 class Tg
-  HOME = ENV['HOME'] || '/home/lich'
-  CMD = "#{HOME}/.tmp/tg/bin/telegram-cli --json --disable-colors --disable-readline"
-  MSGS_FILENAME = "#{HOME}/.tg-script-msgs.json"
+  PROJECT_HOME = ENV['PROJECT_HOME'] || '.'
+  TELEGRAM_CLI = "#{PROJECT_HOME}/../tg/bin/telegram-cli"
+  TELEGRAM_CLI_OPTIONS = '--json --disable-colors --disable-readline'
+  MSGS_FILENAME = "#{PROJECT_HOME}/msgs.json"
   MAX_QUEUE_SIZE = 9999
 
   STICKER_START = '0500000080b97056c5020000000000004b04bccd8bf722a0'
@@ -55,19 +56,26 @@ class Tg
   end
 
   def process_werewolf
+    start_reg = /^游戏启动中/
+    own_reg = /lccc/
+    player_count_reg = /#players: (\d+)/
+    player_count_r_reg = /在最近30秒内加入了游戏/
+    player_count_f_reg = /还剩 (\d+) 名玩家。/
+    cancel_reg = /游戏取消/
+
     extend_text = '/extend@werewolfbot 123'
     last_extend_index = -1
     last_extend_r_index = -1
     (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      break if /^游戏启动中/.match?(msg['text'])
-      break if /游戏取消/.match?(msg['text'])
+      break if start_reg.match?(msg['text'])
+      break if cancel_reg.match?(msg['text'])
       if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
         if msg['media']  && 'unsupported' === msg['media']['type']
           last_extend_r_index = i
         end
       end
       break last_extend_index = i if extend_text === msg['text']
-      break if /#players: (\d+)/.match?(msg['text'])
+      break if player_count_reg.match?(msg['text'])
     }
 
     if last_extend_index != -1 && last_extend_r_index != -1
@@ -91,21 +99,21 @@ class Tg
     player_count_index = -1
     has_own = false
     (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      break if /^游戏启动中/.match?(msg['text'])
-      break if /游戏取消/.match?(msg['text'])
-      if /在最近30秒内加入了游戏/.match?(msg['text'])
+      break if start_reg.match?(msg['text'])
+      break if cancel_reg.match?(msg['text'])
+      if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
-        has_own = /lccc/.match?(msg['text'])
+        has_own = own_reg.match?(msg['text'])
       end
       last_extend_index = i if extend_text == msg['text']
-      if /#players: (\d+)/.match?(msg['text'])
+      if player_count_reg.match?(msg['text'])
         break player_count_index = i
       end
     }
     
     player_count_f_index = -1
     (player_count_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      rs = /还剩 (\d+) 名玩家。/.match(msg['text'])
+      rs = player_count_f_reg.match(msg['text'])
       if rs && rs.size === 2
         player_count = rs[1].to_i
         break player_count_f_index = i
@@ -113,7 +121,7 @@ class Tg
     } if player_count_index != -1
     
     (player_count_f_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      if /在最近30秒内加入了游戏/.match?(msg['text'])
+      if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
       end
     } if player_count_f_index != -1
@@ -138,7 +146,7 @@ class Tg
       (0...player_count_index).to_a.reverse.each { |i| @msgs.delete_at i }
     end
 
-    if msg['text'] && msg['text'].start_with?('游戏启动中')
+    if start_reg.match?(msg['text'])
       @stdin << "fwd #{msg['to']['print_name']} #{STICKER_START}\n"
     end
   end
@@ -161,7 +169,12 @@ class Tg
 
   def start
     `pkill telegram-cli`
-    @stdin, @stdout, @stderr, @wait_thr = Open3.popen3 CMD
+
+    cmd = TELEGRAM_CLI
+    cmd = 'telegram-cli' if not File.exists?(TELEGRAM_CLI)
+    cmd = "#{cmd} #{TELEGRAM_CLI_OPTIONS}"
+
+    @stdin, @stdout, @stderr, @wait_thr = Open3.popen3 cmd
 
     trap("SIGINT") { stop }
     trap("TERM") { stop }
@@ -195,4 +208,4 @@ class Tg
 end
 
 
-Tg.new.start
+Tg.new.start if __FILE__ == $0

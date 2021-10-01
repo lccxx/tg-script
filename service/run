@@ -1,5 +1,8 @@
 #!/bin/bash
 
-export HOME=/home/lich
+SERVICE_PATH=$(dirname $(readlink -f $0))
+PROJECT_PATH=$(dirname $SERVICE_PATH)
 
-exec setuidgid lich /usr/bin/ruby $HOME/.tmp/tg-script/tg.rb >> $HOME/.tg-script.run.log 2>&1
+export PROJECT_HOME=PROJECT_PATH
+
+exec setuidgid lich $PROJECT_PATH/tg.rb >> $SERVICE_PATH/.run.log 2>&1
