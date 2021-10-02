@@ -157,7 +157,7 @@ class Tg
   end
 
   def check
-    stop if Time.now - @last_msg_at > 19
+    stop if Time.now - @last_msg_at > 39
 
     @stdin << "get_self\n"
   end
@@ -182,7 +182,7 @@ class Tg
     Thread.new { loop {
       break if @stop
 
-      sleep 9
+      sleep 29
       check
     } }
 
