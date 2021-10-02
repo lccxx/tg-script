@@ -128,7 +128,7 @@ class Tg
 
     msg = @msgs.last
 
-    puts "player_count: #{player_count}, player_count_index: #{player_count_index}, has_own: #{has_own}"
+    puts "player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
       if Time.now - @last_extend > [9, 5][@extend_count % 2]
