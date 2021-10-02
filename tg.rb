@@ -82,15 +82,19 @@ class Tg
       r_msg = @msgs[last_extend_r_index]
       e_msg = @msgs[last_extend_index]
       if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 19
-        delete_msg last_extend_r_index 
-        msg = @msgs[last_extend_index - 1]
-        if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
-          if msg['media']  && 'unsupported' === msg['media']['type']
-            delete_msg last_extend_index - 1
-          end
-        end
+        delete_msg last_extend_r_index
+
         (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-          delete_msg i if extend_text === msg['text']
+          if extend_text === msg['text']
+            delete_msg i
+
+            msg = @msgs[i - 1]
+            if msg && msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
+              if msg['media'] && 'unsupported' === msg['media']['type']
+                delete_msg i - 1
+              end
+            end
+          end
         }
       end
     end
