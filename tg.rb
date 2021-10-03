@@ -67,7 +67,6 @@ class Tg
     last_extend_index = -1
     last_extend_r_index = -1
     (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      break if start_reg.match?(msg['text'])
       break if cancel_reg.match?(msg['text'])
       if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
         if msg['media']  && 'unsupported' === msg['media']['type']
@@ -76,6 +75,7 @@ class Tg
       end
       break last_extend_index = i if extend_text === msg['text']
       break if player_count_reg.match?(msg['text'])
+      break if start_reg.match?(msg['text'])
     }
 
     if last_extend_index != -1 && last_extend_r_index != -1
@@ -103,7 +103,6 @@ class Tg
     player_count_index = -1
     has_own = false
     (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
-      break if start_reg.match?(msg['text'])
       break if cancel_reg.match?(msg['text'])
       if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
@@ -113,6 +112,7 @@ class Tg
       if player_count_reg.match?(msg['text'])
         break player_count_index = i
       end
+      break if start_reg.match?(msg['text'])
     }
     
     player_count_f_index = -1
