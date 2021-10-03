@@ -137,7 +137,7 @@ class Tg
     if player_count < 5 && has_own && player_count_index != -1
       if Time.now - @last_extend > [9, 5][@extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
-          if msg['media']  && 'unsupported' === msg['media']['type']
+          if msg['media'] && 'unsupported' === msg['media']['type']
             send(msg['to']['print_name'], extend_text)
             @last_extend = Time.now
             @extend_count += 1
