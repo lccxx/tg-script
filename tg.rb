@@ -106,7 +106,7 @@ class Tg
       break if cancel_reg.match?(msg['text'])
       if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
-        has_own = own_reg.match?(msg['text'])
+        has_own = own_reg.match?(msg['text']) if not has_own
       end
       last_extend_index = i if extend_text == msg['text']
       if player_count_reg.match?(msg['text'])
