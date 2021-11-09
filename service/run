@@ -5,4 +5,4 @@ PROJECT_PATH=$(dirname $SERVICE_PATH)
 
 export PROJECT_HOME=$PROJECT_PATH
 
-exec setuidgid lich $PROJECT_PATH/tg.rb >> $SERVICE_PATH/run.log 2>&1
+$PROJECT_PATH/tg.rb >> $SERVICE_PATH/run.log 2>&1
