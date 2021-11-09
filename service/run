@@ -1,8 +1,0 @@
-#!/bin/bash
-
-SERVICE_PATH=$(dirname $(readlink -f $0))
-PROJECT_PATH=$(dirname $SERVICE_PATH)
-
-export PROJECT_HOME=$PROJECT_PATH
-
-$PROJECT_PATH/tg.rb >> $SERVICE_PATH/run.log 2>&1
