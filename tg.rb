@@ -4,7 +4,7 @@ require 'json'
 require 'open3'
 
 class Tg
-  PROJECT_HOME = ENV['PROJECT_HOME'] || '.'
+  PROJECT_HOME = ENV['PROJECT_HOME'] || File.dirname(__FILE__)
   TELEGRAM_CLI = "#{PROJECT_HOME}/../tg/bin/telegram-cli"
   TELEGRAM_CLI_OPTIONS = '--json --disable-colors --disable-readline'
   MSGS_FILENAME = "#{PROJECT_HOME}/msgs.json"
