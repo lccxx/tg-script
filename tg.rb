@@ -44,8 +44,10 @@ class Tg
   def send(to, text)
     return if @stdin.nil? || @stop === true
 
-    log msg = "msg #{to} #{text}\n"
+    msg = "msg #{to} #{text}\n"
     @stdin << msg
+
+    log "send msg #{to} #{text}"
   end
 
   def process(msg)
