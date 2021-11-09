@@ -8,6 +8,7 @@ class Tg
   TELEGRAM_CLI = "#{PROJECT_HOME}/../tg/bin/telegram-cli"
   TELEGRAM_CLI_OPTIONS = '--json --disable-colors --disable-readline'
   MSGS_FILENAME = "#{PROJECT_HOME}/msgs.json"
+  LOG_FILENAME = "#{PROJECT_HOME}/run.log"
   MAX_QUEUE_SIZE = 9999
 
   STICKER_START = '0500000080b97056c5020000000000004b04bccd8bf722a0'
@@ -35,11 +36,15 @@ class Tg
   def save_msgs
     open(MSGS_FILENAME, 'wb') { |fo| fo.write @msgs.to_json }
   end
+  
+  def log(text)
+    open(LOG_FILENAME, 'a') { |fo| fo.puts text }
+  end
 
   def send(to, text)
     return if @stdin.nil? || @stop === true
 
-    p msg = "msg #{to} #{text}\n"
+    log msg = "msg #{to} #{text}\n"
     @stdin << msg
   end
 
@@ -132,7 +137,7 @@ class Tg
 
     msg = @msgs.last
 
-    puts "player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
+    log "player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
       if Time.now - @last_extend > [9, 5][@extend_count % 2]
@@ -193,7 +198,7 @@ class Tg
     loop {
       break if @stop
 
-      puts line = @stdout.gets.strip
+      log line = @stdout.gets.strip
       @last_msg_at = Time.now
 
       begin
