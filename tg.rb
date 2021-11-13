@@ -61,11 +61,11 @@ class Tg
       @groups[group] = msgs
       save_msgs
 
-      process_werewolf msgs
+      process_werewolf group, msgs
     end
   end
 
-  def process_werewolf(msgs)
+  def process_werewolf(group, msgs)
     start_reg = /^游戏启动中/
     own_reg = /lccc/
     player_count_reg = /#players: (\d+)/
@@ -142,7 +142,7 @@ class Tg
 
     msg = msgs.last
 
-    log "player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
+    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
       if Time.now - @last_extend > [9, 5][@extend_count % 2]
