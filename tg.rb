@@ -18,7 +18,7 @@ class Tg
 
     @stop = false
 
-    @groups = {  }  // message groups, msgs
+    @groups = {  }  # message groups, msgs
     @last_extend = Time.at 0
     @extend_count = 0
 
@@ -41,13 +41,12 @@ class Tg
     open(LOG_FILENAME, 'a') { |fo| fo.puts text }
   end
 
-  def send_msg(to, text)
+  def send_msg(group, text)
     return if @stdin.nil? || @stop === true
 
-    msg = "msg #{to} #{text}\n"
-    @stdin << msg
+    @stdin << "msg #{group} #{text}\n"
 
-    log "send msg #{to} #{text}"
+    log "send msg #{group} #{text}"
   end
 
   def process(msg)
