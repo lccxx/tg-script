@@ -18,7 +18,7 @@ class Tg
 
     @stop = false
 
-    @msgs = [ ]
+    @groups = {  }  // message groups, msgs
     @last_extend = Time.at 0
     @extend_count = 0
 
@@ -29,12 +29,12 @@ class Tg
 
   def load_msgs
     if File.exists? MSGS_FILENAME
-      @msgs = JSON.parse File.read MSGS_FILENAME
+      @groups = JSON.parse File.read MSGS_FILENAME
     end
   end
 
   def save_msgs
-    open(MSGS_FILENAME, 'wb') { |fo| fo.write @msgs.to_json }
+    open(MSGS_FILENAME, 'wb') { |fo| fo.write @groups.to_json }
   end
   
   def log(text)
@@ -51,18 +51,21 @@ class Tg
   end
 
   def process(msg)
-    @msgs << msg if @msgs.find { |m| msg['id'] === m['id'] }.nil?
-    @msgs.drop 1 if @msgs.size > MAX_QUEUE_SIZE
-    save_msgs
-
-    if 'message' === msg['event']
+    if 'message' === msg['event'] && msg['to'] && msg['to']['print_name']
       stop if '/quit@lccxx' === msg['text']
 
-      process_werewolf
+      group = msg['to']['print_name']
+      msgs = @groups[group] || [ ]
+      msgs << msg if msgs.find { |m| msg['id'] === m['id'] }.nil?
+      msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
+      @groups[group] = msgs
+      save_msgs
+
+      process_werewolf msgs
     end
   end
 
-  def process_werewolf
+  def process_werewolf(msgs)
     start_reg = /^游戏启动中/
     own_reg = /lccc/
     player_count_reg = /#players: (\d+)/
@@ -73,7 +76,7 @@ class Tg
     extend_text = '/extend@werewolfbot 123'
     last_extend_index = -1
     last_extend_r_index = -1
-    (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+    (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       break if cancel_reg.match?(msg['text'])
       if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
         if msg['media']  && 'unsupported' === msg['media']['type']
@@ -86,19 +89,19 @@ class Tg
     }
 
     if last_extend_index != -1 && last_extend_r_index != -1
-      r_msg = @msgs[last_extend_r_index]
-      e_msg = @msgs[last_extend_index]
+      r_msg = msgs[last_extend_r_index]
+      e_msg = msgs[last_extend_index]
       if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 19
-        delete_msg last_extend_r_index
+        delete_msg msgs, last_extend_r_index
 
-        (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+        (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
           if msg && extend_text === msg['text']
-            delete_msg i
+            delete_msg msgs, i
 
-            msg = @msgs[i - 1]
+            msg = msgs[i - 1]
             if msg && msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
               if msg['media'] && 'unsupported' === msg['media']['type']
-                delete_msg i - 1
+                delete_msg msgs, i - 1
               end
             end
           end
@@ -109,7 +112,7 @@ class Tg
     player_count = 0
     player_count_index = -1
     has_own = false
-    (0...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+    (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       break if cancel_reg.match?(msg['text'])
       if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
@@ -123,7 +126,7 @@ class Tg
     }
     
     player_count_f_index = -1
-    (player_count_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+    (player_count_index...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       rs = player_count_f_reg.match(msg['text'])
       if rs && rs.size === 2
         player_count = rs[1].to_i
@@ -131,13 +134,13 @@ class Tg
       end
     } if player_count_index != -1
     
-    (player_count_f_index...@msgs.size).to_a.reverse.each { |i| msg = @msgs[i]
+    (player_count_f_index...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
       end
     } if player_count_f_index != -1
 
-    msg = @msgs.last
+    msg = msgs.last
 
     log "player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
 
@@ -154,7 +157,7 @@ class Tg
     end
 
     if player_count_index != -1
-      (0...player_count_index).to_a.reverse.each { |i| @msgs.delete_at i }
+      (0...player_count_index).to_a.reverse.each { |i| msgs.delete_at i }
     end
 
     if start_reg.match?(msg['text'])
@@ -162,8 +165,8 @@ class Tg
     end
   end
 
-  def delete_msg(i)
-    msg = @msgs.delete_at i
+  def delete_msg(msgs, i)
+    msg = msgs.delete_at i
     @stdin << "delete_msg #{msg['id']}\n"
   end
 
