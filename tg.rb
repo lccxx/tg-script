@@ -52,8 +52,6 @@ class Tg
 
   def process(msg)
     if 'message' === msg['event'] && msg['to'] && msg['to']['print_name']
-      stop if '/quit@lccxx' === msg['text']
-
       group = msg['to']['print_name']
       msgs = @groups[group] || [ ]
       msgs << msg if msgs.find { |m| msg['id'] === m['id'] }.nil?
