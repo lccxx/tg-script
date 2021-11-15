@@ -34,19 +34,19 @@ class Tg
   end
 
   def save_msgs
-    open(MSGS_FILENAME, 'wb') { |fo| fo.write @groups.to_json }
+    File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb')
   end
   
   def log(text)
-    open(LOG_FILENAME, 'a') { |fo| fo.puts text }
+    File.write(LOG_FILENAME, text, mode: 'a')
   end
 
   def send_msg(group, text)
     return if @stdin.nil? || @stop === true
 
-    @stdin << "msg #{group} #{text}\n"
+    @stdin << msg = "msg #{group} #{text}\n"
 
-    log "send msg #{group} #{text}"
+    log "send #{msg}"
   end
 
   def process(msg)
@@ -147,7 +147,7 @@ class Tg
 
     msg = msgs.last
 
-    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
+    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}\n"
 
     if player_count < 5 && has_own && player_count_index != -1
       if Time.now - @last_extend > [9, 5][@extend_count % 2]
@@ -208,7 +208,7 @@ class Tg
     loop {
       break if @stop
 
-      log line = @stdout.gets.strip
+      line = @stdout.gets.strip
       @last_msg_at = Time.now
 
       begin
@@ -217,6 +217,8 @@ class Tg
 
       rescue JSON::ParserError
         # do nothing
+      ensure
+        log "#{line}\n"
       end
     }
 
