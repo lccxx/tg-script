@@ -57,8 +57,8 @@ class Tg
       msgs << msg if msgs.find { |m| msg['id'] === m['id'] }.nil?
       msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
 
-      if msgs.find { |m| m['from'] && 'Werewolf_Moderator' === m['from']['print_name']
-                         && m['to'] && m['to']['peer_type'] !== 'user' }
+      if msgs.find { |m|
+          m['from'] && 'Werewolf_Moderator' === m['from']['print_name'] && m['to'] && m['to']['peer_type'] != 'user' }
 
         process_werewolf group, msgs
       else
