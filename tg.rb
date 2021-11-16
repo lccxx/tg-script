@@ -38,7 +38,7 @@ class Tg
   end
   
   def log(text)
-    File.write(LOG_FILENAME, "#{Time.now}: #{text.strip}", mode: 'a')
+    File.write(LOG_FILENAME, "#{Time.now}: #{text.strip}\n", mode: 'a')
   end
 
   def send_msg(group, text)
