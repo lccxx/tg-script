@@ -38,7 +38,7 @@ class Tg
   end
   
   def log(text)
-    File.write(LOG_FILENAME, text, mode: 'a')
+    File.write(LOG_FILENAME, "#{Time.now}: #{text.strip}", mode: 'a')
   end
 
   def send_msg(group, text)
@@ -147,7 +147,7 @@ class Tg
 
     msg = msgs.last
 
-    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}\n"
+    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
       if Time.now - @last_extend > [9, 5][@extend_count % 2]
@@ -218,13 +218,15 @@ class Tg
       rescue JSON::ParserError
         # do nothing
       ensure
-        log "#{line}\n"
+        log line
       end
     }
 
     @stdin.close
     @stdout.close
     @stderr.close
+
+    log 'QUIT'
   end
 end
 
