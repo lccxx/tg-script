@@ -28,7 +28,7 @@ class Tg
 
     @save_flag = false
   end
-  
+
   def log(text)
     @logs_queue << "#{Time.now}: #{text.strip}\n"
   end
@@ -127,7 +127,7 @@ class Tg
       end
       break if start_reg.match?(msg['text'])
     }
-    
+
     player_count_f_index = -1
     (player_count_index...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       rs = player_count_f_reg.match(msg['text'])
@@ -136,7 +136,7 @@ class Tg
         break player_count_f_index = i
       end
     } if player_count_index != -1
-    
+
     (player_count_f_index...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
