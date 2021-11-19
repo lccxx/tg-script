@@ -84,7 +84,7 @@ class Tg
       end
       if extend_text === msg['text']
         extend_count += 1
-        last_extend = Time.at(['date'].to_i) if last_extend == Time.at(0)
+        last_extend = Time.at(msg['date'].to_i) if last_extend == Time.at(0)
         break last_extend_index = i
       end
       break if player_count_reg.match?(msg['text'])
