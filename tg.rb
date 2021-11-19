@@ -72,7 +72,7 @@ class Tg
 
     extend_text = '/extend@werewolfbot 123'
     extend_count = 0
-    last_extend = Time.at(0)
+    last_extend_at = Time.at(0)
     last_extend_index = -1
     last_extend_r_index = -1
     (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
@@ -84,7 +84,7 @@ class Tg
       end
       if extend_text === msg['text']
         extend_count += 1
-        last_extend = Time.at(msg['date'].to_i) if last_extend == Time.at(0)
+        last_extend_at = Time.at(msg['date'].to_i) if last_extend_at == Time.at(0)
         break last_extend_index = i
       end
       break if player_count_reg.match?(msg['text'])
@@ -148,7 +148,7 @@ class Tg
     log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
-      if Time.now - last_extend > [9, 5][extend_count % 2]
+      if Time.now - last_extend_at > [9, 5][extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media'] && 'unsupported' === msg['media']['type']
             send_msg(group, extend_text)
