@@ -207,11 +207,6 @@ class Tg
     trap("TERM") { stop }
 
     Thread.new { loop {  # tasks loop
-      break if @stop
-
-      @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
-      @tasks_counter += 1
-
       File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb') if @save_flag
 
       open(LOG_FILENAME, 'a') { |fo|
@@ -220,6 +215,11 @@ class Tg
         }
         @logs_queue.clear
       } if not @logs_queue.empty?
+
+      break if @stop
+
+      @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
+      @tasks_counter += 1
 
       sleep 1
     } }
