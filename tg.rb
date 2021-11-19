@@ -19,54 +19,46 @@ class Tg
     @stop = false
 
     @groups = {  }  # message groups, msgs
-    @last_extend = Time.at 0
-    @extend_count = 0
+
+    @logs_queue = [ ]
+    @tasks_queue = { }
+    @tasks_counter = 0
 
     @last_msg_at = nil
 
-    load_msgs
-  end
-
-  def load_msgs
-    if File.exists? MSGS_FILENAME
-      @groups = JSON.parse File.read MSGS_FILENAME
-    end
-  end
-
-  def save_msgs
-    File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb')
+    @save_flag = false
   end
   
   def log(text)
-    File.write(LOG_FILENAME, "#{Time.now}: #{text.strip}\n", mode: 'a')
+    @logs_queue << "#{Time.now}: #{text.strip}\n"
   end
 
   def send_msg(group, text)
     return if @stdin.nil? || @stop === true
 
-    @stdin << msg = "msg #{group} #{text}\n"
-
     log "send #{msg}"
+    @stdin << msg = "msg #{group} #{text}\n"
   end
 
   def process(msg)
-    if 'message' === msg['event'] && msg['to'] && msg['to']['print_name']
+    if 'message' === msg['event'] && m['from'] && msg['to'] && msg['to']['print_name']
       group = msg['to']['print_name']
       msgs = @groups[group] || [ ]
 
-      msgs << msg if msgs.find { |m| msg['id'] === m['id'] }.nil?
+      return if msgs.find { |m| msg['id'] === m['id'] }
+
+      @save_flag = true
+
+      msgs << msg
       msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
 
-      if msgs.find { |m|
-          m['from'] && 'Werewolf_Moderator' === m['from']['print_name'] && m['to'] && m['to']['peer_type'] != 'user' }
-
+      if msgs.find { |m| 'Werewolf_Moderator' === m['from']['print_name'] && m['to']['peer_type'] != 'user' }
         process_werewolf group, msgs
       else
         msgs.clear
       end
 
       @groups[group] = msgs
-      save_msgs
     end
   end
 
@@ -79,6 +71,8 @@ class Tg
     cancel_reg = /游戏取消/
 
     extend_text = '/extend@werewolfbot 123'
+    extend_count = 0
+    last_extend = Time.at(0)
     last_extend_index = -1
     last_extend_r_index = -1
     (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
@@ -88,7 +82,11 @@ class Tg
           last_extend_r_index = i
         end
       end
-      break last_extend_index = i if extend_text === msg['text']
+      if extend_text === msg['text']
+        extend_count += 1
+        last_extend = Time.at(['date'].to_i) if last_extend == Time.at(0)
+        break last_extend_index = i
+      end
       break if player_count_reg.match?(msg['text'])
       break if start_reg.match?(msg['text'])
     }
@@ -147,15 +145,19 @@ class Tg
 
     msg = msgs.last
 
-    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{@extend_count}"
+    log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
-      if Time.now - @last_extend > [9, 5][@extend_count % 2]
+      if Time.now - last_extend > [9, 5][extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media'] && 'unsupported' === msg['media']['type']
             send_msg(group, extend_text)
-            @last_extend = Time.now
-            @extend_count += 1
+            @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
+              cmsgs = @groups[group]
+              (0...cmsgs.size).to_a.reverse.each { |i| msg = cmsgs[i]
+                break send_msg(group, extend_text) if extend_text === msg['text']
+              }
+            }
           end
         end
       end
@@ -179,6 +181,8 @@ class Tg
     stop if Time.now - @last_msg_at > 39
 
     @stdin << "get_self\n"
+
+    @tasks_queue[29 + @tasks_counter] = proc { check }
   end
 
   def stop
@@ -193,17 +197,34 @@ class Tg
     cmd = 'telegram-cli' if not File.exists?(TELEGRAM_CLI)
     cmd = "#{cmd} #{TELEGRAM_CLI_OPTIONS}"
 
+    if File.exists? MSGS_FILENAME
+      @groups = JSON.parse File.read MSGS_FILENAME
+    end
+
     @stdin, @stdout, @stderr, @wait_thr = Open3.popen3 cmd
 
     trap("SIGINT") { stop }
     trap("TERM") { stop }
 
-    Thread.new { loop {
+    Thread.new { loop {  # tasks loop
       break if @stop
 
-      sleep 29
-      check
+      @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
+      @tasks_counter += 1
+
+      File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb') if @save_flag
+
+      open(LOG_FILENAME, 'a') { |fo|
+        @logs_queue.each { |log|
+          fo.write log
+        }
+        @logs_queue.clear
+      } if not @logs_queue.empty?
+
+      sleep 1
     } }
+
+    @tasks_queue[29] = proc { check }
 
     loop {
       break if @stop
@@ -211,22 +232,20 @@ class Tg
       line = @stdout.gets.strip
       @last_msg_at = Time.now
 
+      log line
       begin
 
         process JSON.parse line
 
       rescue JSON::ParserError
         # do nothing
-      ensure
-        log line
       end
     }
 
+    log 'QUIT'
     @stdin.close
     @stdout.close
     @stderr.close
-
-    log 'QUIT'
   end
 end
 
