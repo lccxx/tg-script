@@ -41,7 +41,7 @@ class Tg
   end
 
   def process(msg)
-    if 'message' === msg['event'] && m['from'] && msg['to'] && msg['to']['print_name']
+    if 'message' === msg['event'] && msg['from'] && msg['to'] && msg['to']['print_name']
       group = msg['to']['print_name']
       msgs = @groups[group] || [ ]
 
