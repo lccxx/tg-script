@@ -36,8 +36,8 @@ class Tg
   def send_msg(group, text)
     return if @stdin.nil? || @stop === true
 
-    log "send #{msg}"
     @stdin << msg = "msg #{group} #{text}\n"
+    log "send #{msg}"
   end
 
   def process(msg)
