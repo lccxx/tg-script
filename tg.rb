@@ -47,8 +47,6 @@ class Tg
 
       return if msgs.find { |m| msg['id'] === m['id'] }
 
-      @save_flag = true
-
       msgs << msg
       msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
 
@@ -59,6 +57,7 @@ class Tg
       end
 
       @groups[group] = msgs
+      @save_flag = true
     end
   end
 
@@ -193,21 +192,18 @@ class Tg
   def start
     `pkill telegram-cli`
 
-    cmd = TELEGRAM_CLI
-    cmd = 'telegram-cli' if not File.exists?(TELEGRAM_CLI)
-    cmd = "#{cmd} #{TELEGRAM_CLI_OPTIONS}"
+    trap("SIGINT") { stop }
+    trap("TERM") { stop }
 
     if File.exists? MSGS_FILENAME
       @groups = JSON.parse File.read MSGS_FILENAME
     end
 
-    @stdin, @stdout, @stderr, @wait_thr = Open3.popen3 cmd
-
-    trap("SIGINT") { stop }
-    trap("TERM") { stop }
-
     Thread.new { loop {  # tasks loop
-      File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb') if @save_flag
+      if @save_flag
+        File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb')
+        @save_flag = false
+      end
 
       open(LOG_FILENAME, 'a') { |fo|
         @logs_queue.each { |log|
@@ -226,6 +222,12 @@ class Tg
 
     @tasks_queue[29] = proc { check }
 
+
+    cmd = TELEGRAM_CLI
+    cmd = 'telegram-cli' if not File.exists?(TELEGRAM_CLI)
+    cmd = "#{cmd} #{TELEGRAM_CLI_OPTIONS}"
+
+    @stdin, @stdout, @stderr, @wait_thr = Open3.popen3 cmd
     loop {
       break if @stop
 
