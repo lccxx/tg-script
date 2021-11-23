@@ -66,6 +66,20 @@ class Tg
     end
   end
 
+  def send_extend(group)
+    send_msg(group, EXTEND_TEXT)
+    @last_extend_at[group] = Time.now
+
+    @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
+      msgs = @groups[group]
+      (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
+        if EXTEND_TEXT === msg['text']
+          break send_extend(group)
+        end
+      }
+    }
+  end
+
   def process_werewolf(group, msgs)
     start_reg = /^游戏启动中/
     own_reg = /lccc/
@@ -155,17 +169,7 @@ class Tg
       if Time.now - last_extend_at > [9, 5][extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media'] && 'unsupported' === msg['media']['type']
-            send_msg(group, EXTEND_TEXT)
-            @last_extend_at[group] = Time.now
-            @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
-              cmsgs = @groups[group]
-              (0...cmsgs.size).to_a.reverse.each { |i| msg = cmsgs[i]
-                if EXTEND_TEXT === msg['text']
-                  @last_extend_at[group] = Time.now
-                  break send_msg(group, EXTEND_TEXT)
-                end
-              }
-            }
+            send_extend group
           end
         end
       end
@@ -198,12 +202,15 @@ class Tg
   def stop
     @need_extend.keys.each { |group|
       if @need_extend[group]
-        send_msg(group, EXTEND_TEXT)
+        send_extend group
       end
     }
 
-    @stdin << "quit\n"
-    @stop = true
+    # quit after 1 second
+    @tasks_queue[1 + @tasks_counter] = proc {
+      @stdin << "quit\n"
+      @stop = true
+    }
   end
 
   def start
@@ -236,8 +243,7 @@ class Tg
 
       @need_extend.keys.each { |group|
         if @need_extend[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
-          send_msg(group, EXTEND_TEXT)
-          @last_extend_at[group] = Time.now
+          send_extend group
         end
       }
 
