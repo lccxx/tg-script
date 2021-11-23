@@ -11,6 +11,9 @@ class Tg
   LOG_FILENAME = "#{PROJECT_HOME}/run.log"
   MAX_QUEUE_SIZE = 9999
 
+  EXTEND_TIME = 123
+  EXTEND_TEXT = "/extend@werewolfbot #{EXTEND_TIME}"
+
   STICKER_START = '0500000080b97056c5020000000000004b04bccd8bf722a0'
 
   def initialize
@@ -25,6 +28,8 @@ class Tg
     @tasks_counter = 0
 
     @last_msg_at = nil
+    @last_extend_at = { }
+    @need_extend = { }
 
     @save_flag = false
   end
@@ -69,7 +74,6 @@ class Tg
     player_count_f_reg = /还剩 (\d+) 名玩家。/
     cancel_reg = /游戏取消/
 
-    extend_text = '/extend@werewolfbot 123'
     extend_count = 0
     last_extend_at = Time.at(0)
     last_extend_index = -1
@@ -81,7 +85,7 @@ class Tg
           last_extend_r_index = i
         end
       end
-      if extend_text === msg['text']
+      if EXTEND_TEXT === msg['text']
         extend_count += 1
         last_extend_at = Time.at(msg['date'].to_i) if last_extend_at == Time.at(0)
         break last_extend_index = i
@@ -97,7 +101,7 @@ class Tg
         delete_msg msgs, last_extend_r_index
 
         (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
-          if msg && extend_text === msg['text']
+          if msg && EXTEND_TEXT === msg['text']
             delete_msg msgs, i
 
             msg = msgs[i - 1]
@@ -120,7 +124,7 @@ class Tg
         player_count += msg['text'].scan(', ').count + 1
         has_own = own_reg.match?(msg['text']) if not has_own
       end
-      last_extend_index = i if extend_text == msg['text']
+      last_extend_index = i if EXTEND_TEXT == msg['text']
       if player_count_reg.match?(msg['text'])
         break player_count_index = i
       end
@@ -147,19 +151,26 @@ class Tg
     log "#{group}, player_count: #{player_count}, has_own: #{has_own}, extend_count: #{extend_count}"
 
     if player_count < 5 && has_own && player_count_index != -1
+      @need_extend[group] = true
       if Time.now - last_extend_at > [9, 5][extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media'] && 'unsupported' === msg['media']['type']
-            send_msg(group, extend_text)
+            send_msg(group, EXTEND_TEXT)
+            @last_extend_at[group] = Time.now
             @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
               cmsgs = @groups[group]
               (0...cmsgs.size).to_a.reverse.each { |i| msg = cmsgs[i]
-                break send_msg(group, extend_text) if extend_text === msg['text']
+                if EXTEND_TEXT === msg['text']
+                  @last_extend_at[group] = Time.now
+                  break send_msg(group, EXTEND_TEXT)
+                end
               }
             }
           end
         end
       end
+    else
+      @need_extend[group] = false
     end
 
     if player_count_index != -1
@@ -185,6 +196,12 @@ class Tg
   end
 
   def stop
+    @need_extend.keys.each { |group|
+      if @need_extend[group]
+        send_msg(group, EXTEND_TEXT)
+      end
+    }
+
     @stdin << "quit\n"
     @stop = true
   end
@@ -216,6 +233,13 @@ class Tg
 
       @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
       @tasks_counter += 1
+
+      @need_extend.keys.each { |group|
+        if @need_extend[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
+          send_msg(group, EXTEND_TEXT)
+          @last_extend_at[group] = Time.now
+        end
+      }
 
       sleep 1
     } }
