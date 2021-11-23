@@ -200,12 +200,6 @@ class Tg
   end
 
   def stop
-    @need_extend.keys.each { |group|
-      if @need_extend[group]
-        send_extend group
-      end
-    }
-
     # quit after 1 second
     @tasks_queue[1 + @tasks_counter] = proc {
       begin; @stdin << "quit\n"; rescue; end
