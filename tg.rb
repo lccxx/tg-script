@@ -208,7 +208,7 @@ class Tg
 
     # quit after 1 second
     @tasks_queue[1 + @tasks_counter] = proc {
-      @stdin << "quit\n"
+      begin; @stdin << "quit\n"; rescue; end
       @stop = true
     }
   end
