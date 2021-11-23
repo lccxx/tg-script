@@ -261,7 +261,9 @@ class Tg
     loop {
       break if @stop
 
-      line = @stdout.gets.strip
+      line = @stdout.gets
+      next sleep 1 if line.nil?
+
       @last_msg_at = Time.now
 
       log line
