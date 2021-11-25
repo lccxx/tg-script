@@ -218,6 +218,11 @@ class Tg
     end
 
     Thread.new { loop {  # tasks loop
+      break if @stop
+
+      @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
+      @tasks_counter += 1
+
       if @save_flag
         File.write(MSGS_FILENAME, @groups.to_json, mode: 'wb')
         @save_flag = false
@@ -229,11 +234,6 @@ class Tg
         }
         @logs_queue.clear
       } if not @logs_queue.empty?
-
-      break if @stop
-
-      @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
-      @tasks_counter += 1
 
       @need_extend.keys.each { |group|
         if @need_extend[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
