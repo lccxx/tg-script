@@ -181,6 +181,12 @@ class Tg
       (0...player_count_index).to_a.reverse.each { |i| msgs.delete_at i }
     end
 
+    # starting message
+    if player_count_reg.match?(msg['text'])
+      @last_extend_at[group] = Time.now
+    end
+
+    # started message
     if start_reg.match?(msg['text'])
       @stdin << "fwd #{msg['to']['print_name']} #{STICKER_START}\n"
     end
