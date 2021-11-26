@@ -29,6 +29,7 @@ class Tg
 
     @last_msg_at = nil
     @last_extend_at = { }
+    @extend_count = { }
     @need_extend = { }
 
     @save_flag = false
@@ -69,15 +70,19 @@ class Tg
   def send_extend(group)
     send_msg(group, EXTEND_TEXT)
     @last_extend_at[group] = Time.now
+    @extend_count[group] = @extend_count[group] ? @extend_count[group] + 1 : 1
 
     @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
       msgs = @groups[group]
+      flag = false
       (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
         if EXTEND_TEXT === msg['text']
+          flag = true
           break send_extend(group)
         end
       }
-    }
+      @extend_count[group] = 0 if not flag
+    } if @extend_count[group] <= 5
   end
 
   def process_werewolf(group, msgs)
