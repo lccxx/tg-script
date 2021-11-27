@@ -244,14 +244,14 @@ class Tg
   end
 
   def process_wiki(group, msg)
-    title = msg[/wiki@lccxz (.*)/, 1]
+    title = msg['text'][/wiki@lccxz (.*)/, 1]
     return false if title.nil?
 
     params = { action: 'parse', page: title.strip, format: 'json' }
     res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     File.write(tmp_text_file, Nokogiri::HTML(res['parse']['text']['*']).text)
-    @stdin << msg = "msg #{group} #{text}\n"
+    @stdin << "send_text #{group} #{tmp_text_file}\n"
     @tasks_queue[@tasks_counter] = proc { File.delete tmp_text_file }
     return true
   rescue e
