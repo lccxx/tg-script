@@ -245,7 +245,7 @@ class Tg
   end
 
   def process_wiki(group, msg)
-    title = msg['text'][/wiki@lccxz (.*)/, 1]
+    title = msg['text'][/wiki@lccxz (.*)/, 1] if msg['text']
     return false if title.nil?
 
     params = { action: 'parse', page: title.strip, format: 'json' }
