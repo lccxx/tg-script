@@ -14,6 +14,7 @@ class Tg
   EXTEND_TIME = 123
   EXTEND_TEXT = "/extend@werewolfbot #{EXTEND_TIME}"
 
+  STICKER_GOOD = '0500000080b97056dc020000000000004b04bccd8bf722a0'
   STICKER_START = '0500000080b97056c5020000000000004b04bccd8bf722a0'
 
   def initialize
@@ -59,6 +60,8 @@ class Tg
       1.times {
         break if process_quit(msgs)
 
+        break if process_ping(group, msgs)
+
         break if process_werewolf(group, msgs)
 
         msgs.clear
@@ -75,6 +78,12 @@ class Tg
       return true if msg['text'] === '/quit@lccxz'
     }
     return false
+  end
+
+  def process_ping(group, msgs)
+    if msg['text'] === '/ping@lccxz'
+      @stdin << "fwd #{group} #{STICKER_GOOD}\n"
+    end
   end
 
   def send_extend(group)
