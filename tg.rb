@@ -71,7 +71,7 @@ class Tg
       msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
 
       1.times {
-        break if process_quit(msgs)
+        break if process_quit(group, msgs)
 
         break if process_ping(group, msg)
 
@@ -87,7 +87,7 @@ class Tg
     end
   end
 
-  def process_quit(msgs)
+  def process_quit(group, msgs)
     (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
       if msg['text'] === '/start@lccxz'
         @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
