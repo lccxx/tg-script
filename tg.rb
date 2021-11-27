@@ -88,15 +88,16 @@ class Tg
   end
 
   def process_quit(group, msgs)
+    if msgs.last['text'] === '/start@lccxz'
+      @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
+    end
+    if msgs.last['text'] === '/quit@lccxz'
+      @stdin << "fwd #{group} #{rand_select STICKERS_BYE}\n"
+    end
+
     (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
-      if msg['text'] === '/start@lccxz'
-        @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
-        return false
-      end
-      if msg['text'] === '/quit@lccxz'
-        @stdin << "fwd #{group} #{rand_select STICKERS_BYE}\n"
-        return true
-      end
+      return false if msg['text'] === '/start@lccxz'
+      return true if msg['text'] === '/quit@lccxz'
     }
     return false
   end
