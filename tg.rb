@@ -2,6 +2,8 @@
 
 require 'json'
 require 'open3'
+require 'net/http'
+require 'nokogiri'
 
 class Tg
   PROJECT_HOME = ENV['PROJECT_HOME'] || File.dirname(__FILE__)
@@ -14,6 +16,8 @@ class Tg
   EXTEND_TIME = 123
   EXTEND_TEXT = "/extend@werewolfbot #{EXTEND_TIME}"
 
+  STICKERS_BYE = [ '0500000080b97056fb020000000000004b04bccd8bf722a0' ]
+
   STICKERS_GOOD = [ '0500000080b97056dc020000000000004b04bccd8bf722a0',
                    '0500000080b97056df020000000000004b04bccd8bf722a0',
                    '0500000080b97056e1020000000000004b04bccd8bf722a0',
@@ -22,6 +26,9 @@ class Tg
 
   STICKERS_START = [ '0500000080b97056e0020000000000004b04bccd8bf722a0',
                     '0500000080b97056c5020000000000004b04bccd8bf722a0' ]
+
+  WIKI_API_PREFIX = 'https://en.wikipedia.org/w/api.php?'
+
 
   def initialize
     @stdin, @stdout, @stderr, @wait_thr = nil
@@ -70,6 +77,8 @@ class Tg
 
         break if process_werewolf(group, msgs)
 
+        break if process_wiki(group, msg)
+
         msgs.clear
       }
 
@@ -80,8 +89,14 @@ class Tg
 
   def process_quit(msgs)
     (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
-      return false if msg['text'] === '/start@lccxz'
-      return true if msg['text'] === '/quit@lccxz'
+      if msg['text'] === '/start@lccxz'
+        @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
+        return false
+      end
+      if msg['text'] === '/quit@lccxz'
+        @stdin << "fwd #{group} #{rand_select STICKERS_BYE}\n"
+        return true
+      end
     }
     return false
   end
@@ -228,6 +243,20 @@ class Tg
     return true
   end
 
+  def process_wiki(group, msg)
+    title = msg[/wiki@lccxz (.*)/, 1]
+    return false if title.nil?
+
+    params = { action: 'parse', page: title.strip, format: 'json' }
+    res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
+    tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
+    File.write(tmp_text_file, Nokogiri::HTML(res['parse']['text']['*']).text)
+    @stdin << msg = "msg #{group} #{text}\n"
+    @tasks_queue[@tasks_counter] = proc { File.delete tmp_text_file }
+    return true
+  rescue e
+  end
+
   def delete_msg(msgs, i)
     msg = msgs.delete_at i
     @stdin << "delete_msg #{msg['id']}\n"
@@ -282,7 +311,7 @@ class Tg
       } if not @logs_queue.empty?
 
       @need_extend.keys.each { |group|
-        if @last_extend_at[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
+        if @need_extend[group] && @last_extend_at[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
           send_extend group
         end
       }
