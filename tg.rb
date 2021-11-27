@@ -263,7 +263,7 @@ class Tg
       @groups = JSON.parse File.read MSGS_FILENAME
     end
 
-    Thread.new { loop {  # tasks loop
+    Thread.new { loop { begin # tasks loop
       break if @stop
 
       @tasks_queue[@tasks_counter].call if @tasks_queue[@tasks_counter]
@@ -287,8 +287,11 @@ class Tg
         end
       }
 
+    rescue e
+      # do nothing
+    ensure
       sleep 1
-    } }
+    end } }
 
     @tasks_queue[29] = proc { check }
 
