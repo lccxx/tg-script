@@ -56,15 +56,25 @@ class Tg
       msgs << msg
       msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
 
-      if msgs.find { |m| 'Werewolf_Moderator' === m['from']['print_name'] && m['to']['peer_type'] != 'user' }
-        process_werewolf group, msgs
-      else
+      1.times {
+        break if process_quit(msgs)
+
+        break if process_werewolf(group, msgs)
+
         msgs.clear
-      end
+      }
 
       @groups[group] = msgs
       @save_flag = true
     end
+  end
+
+  def process_quit(msgs)
+    (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
+      return false if msg['text'] === '/start@lccxz'
+      return true if msg['text'] === '/quit@lccxz'
+    }
+    return false
   end
 
   def send_extend(group)
@@ -86,6 +96,10 @@ class Tg
   end
 
   def process_werewolf(group, msgs)
+    return false if not msgs.find { |m|
+      'Werewolf_Moderator' === m['from']['print_name'] && m['to']['peer_type'] != 'user'
+    }
+
     start_reg = /^游戏启动中/
     own_reg = /lccc/
     player_count_reg = /#players: (\d+)/
@@ -195,6 +209,8 @@ class Tg
     if start_reg.match?(msg['text'])
       @stdin << "fwd #{msg['to']['print_name']} #{STICKER_START}\n"
     end
+
+    return true
   end
 
   def delete_msg(msgs, i)
