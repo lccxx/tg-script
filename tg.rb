@@ -272,7 +272,7 @@ class Tg
       } if not @logs_queue.empty?
 
       @need_extend.keys.each { |group|
-        if @need_extend[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
+        if @last_extend_at[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
           send_extend group
         end
       }
