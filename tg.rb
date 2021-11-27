@@ -14,8 +14,14 @@ class Tg
   EXTEND_TIME = 123
   EXTEND_TEXT = "/extend@werewolfbot #{EXTEND_TIME}"
 
-  STICKER_GOOD = '0500000080b97056dc020000000000004b04bccd8bf722a0'
-  STICKER_START = '0500000080b97056c5020000000000004b04bccd8bf722a0'
+  STICKERS_GOOD = [ '0500000080b97056dc020000000000004b04bccd8bf722a0',
+                   '0500000080b97056df020000000000004b04bccd8bf722a0',
+                   '0500000080b97056e1020000000000004b04bccd8bf722a0',
+                   '0500000080b97056e2020000000000004b04bccd8bf722a0',
+                   '05000000ab7a7b41b2a527000000000040b8d736b133cd23' ]
+
+  STICKERS_START = [ '0500000080b97056e0020000000000004b04bccd8bf722a0',
+                    '0500000080b97056c5020000000000004b04bccd8bf722a0' ]
 
   def initialize
     @stdin, @stdout, @stderr, @wait_thr = nil
@@ -82,7 +88,7 @@ class Tg
 
   def process_ping(group, msg)
     if msg['text'] === '/ping@lccxz'
-      @stdin << "fwd #{group} #{STICKER_GOOD}\n"
+      @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
     end
   end
 
@@ -216,7 +222,7 @@ class Tg
 
     # started message
     if start_reg.match?(msg['text'])
-      @stdin << "fwd #{msg['to']['print_name']} #{STICKER_START}\n"
+      @stdin << "fwd #{group} #{rand_select STICKERS_START}\n"
     end
 
     return true
@@ -225,6 +231,10 @@ class Tg
   def delete_msg(msgs, i)
     msg = msgs.delete_at i
     @stdin << "delete_msg #{msg['id']}\n"
+  end
+
+  def rand_select(arr)
+    arr[(rand * arr.size).to_i]
   end
 
   def check
