@@ -60,7 +60,7 @@ class Tg
       1.times {
         break if process_quit(msgs)
 
-        break if process_ping(group, msgs)
+        break if process_ping(group, msg)
 
         break if process_werewolf(group, msgs)
 
@@ -80,7 +80,7 @@ class Tg
     return false
   end
 
-  def process_ping(group, msgs)
+  def process_ping(group, msg)
     if msg['text'] === '/ping@lccxz'
       @stdin << "fwd #{group} #{STICKER_GOOD}\n"
     end
