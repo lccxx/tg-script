@@ -71,13 +71,13 @@ class Tg
       msgs.drop 1 if msgs.size > MAX_QUEUE_SIZE
 
       1.times {
-        break if process_quit(group, msgs)
+        break if process_quit(group)
 
-        break if process_ping(group, msg)
+        break if process_ping(group)
 
-        break if process_werewolf(group, msgs)
+        break if process_werewolf(group)
 
-        break if process_wiki(group, msg)
+        break if process_wiki(group)
 
         msgs.clear
       }
@@ -87,7 +87,9 @@ class Tg
     end
   end
 
-  def process_quit(group, msgs)
+  def process_quit(group)
+    msgs = @groups[group]
+
     if msgs.last['text'] === '/start@lccxz'
       @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
     end
@@ -102,13 +104,17 @@ class Tg
     return false
   end
 
-  def process_ping(group, msg)
-    if msg['text'] === '/ping@lccxz'
+  def process_ping(group)
+    msg = @groups[group].last if @groups[group]
+
+    if msg && msg['text'] === '/ping@lccxz'
       @stdin << "fwd #{group} #{rand_select STICKERS_GOOD}\n"
     end
   end
 
   def send_extend(group)
+    return if process_quit(group)
+
     send_msg(group, EXTEND_TEXT)
     @last_extend_at[group] = Time.now
     @extend_count[group] = @extend_count[group] ? @extend_count[group] + 1 : 1
@@ -126,7 +132,9 @@ class Tg
     } if @extend_count[group] <= 5
   end
 
-  def process_werewolf(group, msgs)
+  def process_werewolf(group)
+    msgs = @groups[group]
+
     return false if not msgs.find { |m|
       'Werewolf_Moderator' === m['from']['print_name'] && m['to']['peer_type'] != 'user'
     }
@@ -244,8 +252,9 @@ class Tg
     return true
   end
 
-  def process_wiki(group, msg)
-    title = msg['text'][/wiki@lccxz (.*)/, 1] if msg['text']
+  def process_wiki(group)
+    msg = @groups[group].last if @groups[group]
+    title = msg['text'][/wiki@lccxz (.*)/, 1] if msg && msg['text']
     return false if title.nil?
 
     params = { action: 'parse', page: title.strip, format: 'json' }
