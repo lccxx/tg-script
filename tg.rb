@@ -269,6 +269,7 @@ class Tg
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     doc = Nokogiri::HTML(res['parse']['text']['*'])
     text = doc.css('p').text[/.*is.*\./]
+    text = text.gsub(/\[\d+\]/, '') if text
     text = doc.text if text.nil?
     text = "#{text[0..4091]} ..." if text.length > 4096
     File.write(tmp_text_file, text)
