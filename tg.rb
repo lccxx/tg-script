@@ -254,10 +254,17 @@ class Tg
 
   def process_wiki(group)
     msg = @groups[group].last if @groups[group]
-    title = msg['text'][/wiki@lccxz (.*)/, 1] if msg && msg['text']
+    title = msg['text'][/^\/wiki@lccxz(.*)/, 1] if msg && msg['text']
     return false if title.nil?
 
-    params = { action: 'parse', page: title.strip, format: 'json' }
+    title = title.strip
+    if title.length == 0
+      params = { action: 'query', list: 'random', rnnamespace: 0, format: 'json' }
+      res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
+      title = res['query']['random']['title']
+    end
+ 
+    params = { action: 'parse', page: title, format: 'json' }
     res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     text = Nokogiri::HTML(res['parse']['text']['*']).text
