@@ -261,7 +261,7 @@ class Tg
     if title.length == 0
       params = { action: 'query', list: 'random', rnnamespace: 0, format: 'json' }
       res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
-      title = res['query']['random']['title']
+      title = res['query']['random'].first['title']
     end
  
     params = { action: 'parse', page: title, format: 'json' }
