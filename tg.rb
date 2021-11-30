@@ -260,9 +260,9 @@ class Tg
     params = { action: 'parse', page: title.strip, format: 'json' }
     res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
-    text = res['parse']['text']['*'].text
+    text = Nokogiri::HTML(res['parse']['text']['*']).text
     text = "#{text[0..4091]} ..." if text.length > 4096
-    File.write(tmp_text_file, Nokogiri::HTML(text))
+    File.write(tmp_text_file, text)
     @stdin << "send_text #{group} #{tmp_text_file}\n"
     @tasks_queue[@tasks_counter] = proc { File.delete tmp_text_file }
     return true
