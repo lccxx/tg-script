@@ -262,7 +262,7 @@ class Tg
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     text = res['parse']['text']['*'].text
     text = "#{text[0..4091]} ..." if text.length > 4096
-    File.write(tmp_text_file, Nokogiri::HTML(text)
+    File.write(tmp_text_file, Nokogiri::HTML(text))
     @stdin << "send_text #{group} #{tmp_text_file}\n"
     @tasks_queue[@tasks_counter] = proc { File.delete tmp_text_file }
     return true
