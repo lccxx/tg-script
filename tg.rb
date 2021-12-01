@@ -227,6 +227,7 @@ class Tg
       if Time.now - last_extend_at > [9, 5][extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media'] && 'unsupported' === msg['media']['type']
+            @extend_count[group] = 0
             send_extend group
           end
         end
@@ -335,6 +336,7 @@ class Tg
 
       @need_extend.keys.each { |group|
         if @need_extend[group] && @last_extend_at[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
+          @extend_count[group] = 0
           send_extend group
         end
       }
