@@ -43,7 +43,6 @@ class Tg
 
     @last_msg_at = nil
     @last_extend_at = { }
-    @extend_count = { }
     @need_extend = { }
 
     @save_flag = false
@@ -112,24 +111,20 @@ class Tg
     end
   end
 
-  def send_extend(group)
+  def send_extend(group, extend_count=0)
     return if process_quit(group)
 
     send_msg(group, EXTEND_TEXT)
     @last_extend_at[group] = Time.now
-    @extend_count[group] = @extend_count[group] ? @extend_count[group] + 1 : 1
 
     @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
       msgs = @groups[group]
-      flag = false
       (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
         if EXTEND_TEXT === msg['text']
-          flag = true
-          break send_extend(group)
+          break send_extend(group, extend_count + 1)
         end
       }
-      @extend_count[group] = 0 if not flag
-    } if @extend_count[group] <= 5
+    } if extend_count <= 5
   end
 
   def process_werewolf(group)
@@ -227,7 +222,6 @@ class Tg
       if Time.now - last_extend_at > [9, 5][extend_count % 2]
         if msg['from'] && 'Werewolf_Moderator' === msg['from']['print_name']
           if msg['media'] && 'unsupported' === msg['media']['type']
-            @extend_count[group] = 0
             send_extend group
           end
         end
@@ -277,7 +271,6 @@ class Tg
     File.write(tmp_text_file, text)
     @stdin << "send_text #{group} #{tmp_text_file}\n"
     @tasks_queue[@tasks_counter] = proc { File.delete tmp_text_file }
-    return true
   rescue e
   end
 
@@ -336,7 +329,6 @@ class Tg
 
       @need_extend.keys.each { |group|
         if @need_extend[group] && @last_extend_at[group] && Time.now - @last_extend_at[group] > EXTEND_TIME
-          @extend_count[group] = 0
           send_extend group
         end
       }
