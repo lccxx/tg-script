@@ -124,7 +124,7 @@ class Tg
           break send_extend(group, extend_count + 1)
         end
       }
-    } if extend_count <= 5
+    } if extend_count < 9
   end
 
   def process_werewolf(group)
