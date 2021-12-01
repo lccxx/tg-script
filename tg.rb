@@ -63,7 +63,8 @@ class Tg
   def process(msg)
     if 'message' === msg['event'] && msg['from'] && msg['to'] && msg['to']['print_name']
       group = msg['to']['print_name']
-      msgs = @groups[group] || [ ]
+      @groups[group] = [ ] if @groups[group].nil?
+      msgs = @groups[group]
 
       return if msgs.find { |m| msg['id'] === m['id'] }
 
@@ -82,7 +83,6 @@ class Tg
         msgs.clear
       }
 
-      @groups[group] = msgs
       @save_flag = true
     end
   end
