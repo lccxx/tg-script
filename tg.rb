@@ -236,7 +236,7 @@ class Tg
     end
 
     if cancel_index != -1
-      msgs.cclear
+      msgs.clear
     end
 
     # starting message
