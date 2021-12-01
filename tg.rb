@@ -184,9 +184,10 @@ class Tg
 
     player_count = 0
     player_count_index = -1
+    cancel_index = -1
     has_own = false
     (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
-      break if cancel_reg.match?(msg['text'])
+      break cancel_index = i if cancel_reg.match?(msg['text'])
       if player_count_r_reg.match?(msg['text'])
         player_count += msg['text'].scan(', ').count + 1
         has_own = own_reg.match?(msg['text']) if not has_own
@@ -232,6 +233,10 @@ class Tg
 
     if player_count_index != -1
       (0...player_count_index).to_a.reverse.each { |i| msgs.delete_at i }
+    end
+
+    if cancel_index != -1
+      msgs.cclear
     end
 
     # starting message
