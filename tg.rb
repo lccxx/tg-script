@@ -340,7 +340,7 @@ class Tg
       }
 
     rescue e
-      # do nothing
+      log "#{e}"
     ensure
       sleep 1
     end } }
