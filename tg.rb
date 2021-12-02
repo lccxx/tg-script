@@ -117,7 +117,7 @@ class Tg
     send_msg(group, EXTEND_TEXT)
     @last_extend_at[group] = Time.now
 
-    @tasks_queue[5 + @tasks_counter] = proc {  # check & send again after 5 seconds
+    @tasks_queue[3 + @tasks_counter] = proc {  # check & send again after 5 seconds
       msgs = @groups[group]
       (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
         if EXTEND_TEXT === msg['text']
@@ -164,7 +164,7 @@ class Tg
     if last_extend_index != -1 && last_extend_r_index != -1
       r_msg = msgs[last_extend_r_index]
       e_msg = msgs[last_extend_index]
-      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 9
+      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 5
         delete_msg msgs, last_extend_r_index
 
         (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
