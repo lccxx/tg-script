@@ -117,7 +117,8 @@ class Tg
     send_msg(group, EXTEND_TEXT)
     @last_extend_at[group] = Time.now
 
-    @tasks_queue[1 + @tasks_counter] = proc {  # check & send again after 5 seconds
+    # check & send again after 1 second (max 24 times)
+    @tasks_queue[1 + @tasks_counter] = proc {
       msgs = @groups[group]
       (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
         if EXTEND_TEXT === msg['text']
