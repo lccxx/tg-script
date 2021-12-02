@@ -164,7 +164,7 @@ class Tg
     if last_extend_index != -1 && last_extend_r_index != -1
       r_msg = msgs[last_extend_r_index]
       e_msg = msgs[last_extend_index]
-      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 19
+      if Time.at(r_msg['date'].to_i) - Time.at(e_msg['date'].to_i) < 9
         delete_msg msgs, last_extend_r_index
 
         (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
