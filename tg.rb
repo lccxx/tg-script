@@ -117,14 +117,14 @@ class Tg
     send_msg(group, EXTEND_TEXT)
     @last_extend_at[group] = Time.now
 
-    @tasks_queue[3 + @tasks_counter] = proc {  # check & send again after 5 seconds
+    @tasks_queue[2 + @tasks_counter] = proc {  # check & send again after 5 seconds
       msgs = @groups[group]
       (0...msgs.size).to_a.reverse.each { |i| msg = msgs[i]
         if EXTEND_TEXT === msg['text']
           break send_extend(group, extend_count + 1)
         end
       }
-    } if extend_count < 9
+    } if extend_count < 13
   end
 
   def process_werewolf(group)
