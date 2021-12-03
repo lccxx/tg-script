@@ -255,8 +255,8 @@ class Tg
 
   def process_wiki(group)
     msg = @groups[group].last if @groups[group]
-    lang = msg['text'][/^\/(.{0,2})wiki@lccxz/, 1] if msg && msg['text']
-    title = msg['text'][/wiki@lccxz(.*)$/, 1] if msg && msg['text']
+    lang = msg['text'][/^\/(.{0,2})wiki/, 1] if msg && msg['text']
+    title = msg['text'][/wiki(.*)$/, 1] if msg && msg['text']
     return false if lang.nil? || title.nil?
 
     lang = 'en' if lang.length == 0
