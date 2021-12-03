@@ -289,6 +289,7 @@ class Tg
     text = doc.css('p').text[/.*was.*\./] if text.nil?
     text = doc.css('p').text[/.*\./] if text.nil?
     text = doc.css('p').text if text.nil?
+    text = "#{text}#{doc.css('ul:first').text}" if text && text.strip[/:$/]
     text = doc.css('ul').text if text.nil?
     text = doc.text if text.nil?
     text = text.gsub(/\[\d+\]/, '') if text
