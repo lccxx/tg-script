@@ -271,10 +271,10 @@ class Tg
     params = { action: 'parse', page: title, format: 'json' }
     res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
     doc = Nokogiri::HTML(res['parse']['text']['*'])
-    text = doc.css('p').text[/.*is.*\./]
+    text = doc.css('p').text[/.*。/] if [ 'ja', 'zh' ].include?(lang)
+    text = doc.css('p').text[/.*is.*\./] if text.nil?
     text = doc.css('p').text[/.*was.*\./] if text.nil?
     text = doc.css('p').text[/.*\./] if text.nil?
-    text = doc.css('p').text[/.*。/] if text.nil?
     text = doc.css('p').text if text.nil?
     text = doc.css('ul').text if text.nil?
     text = doc.text if text.nil?
