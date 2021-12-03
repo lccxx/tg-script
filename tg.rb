@@ -261,14 +261,15 @@ class Tg
 
     lang = 'en' if lang.length == 0
     title = title.strip
+    url_prefix = "https://#{lang}.#{WIKI_API_PREFIX}"
     if title.length == 0
       params = { action: 'query', list: 'random', rnnamespace: 0, format: 'json' }
-      res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
+      res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
       title = res['query']['random'].first['title']
     end
  
     params = { action: 'parse', page: title, format: 'json' }
-    res = JSON.parse Net::HTTP.get URI "https://#{lang}.#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
+    res = JSON.parse Net::HTTP.get URI "#{url_prefix}}#{URI.encode_www_form params}"
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     doc = Nokogiri::HTML(res['parse']['text']['*'])
     text = doc.css('p').text[/.*is.*\./]
