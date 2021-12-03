@@ -261,16 +261,27 @@ class Tg
 
     lang = 'en' if lang.length == 0
     title = title.strip
+    doc = nil
     url_prefix = "https://#{lang}.#{WIKI_API_PREFIX}"
-    if title.length == 0
-      params = { action: 'query', list: 'random', rnnamespace: 0, format: 'json' }
+    loop {
+      if title.length == 0
+        params = { action: 'query', list: 'random', rnnamespace: 0, format: 'json' }
+        res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
+        title = res['query']['random'].first['title']
+      end
+  
+      params = { action: 'parse', page: title, format: 'json' }
       res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
-      title = res['query']['random'].first['title']
-    end
- 
-    params = { action: 'parse', page: title, format: 'json' }
-    res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
-    doc = Nokogiri::HTML(res['parse']['text']['*'])
+      return false if res['parse'].nil?
+
+      doc = Nokogiri::HTML(res['parse']['text']['*'])
+
+      redirectMsg = doc.css('div.redirectMsg a:first').attr('title')
+      break if redirectMsg.nil?
+
+      title = redirectMsg.to_s
+    }
+
     text = doc.css('p').text[/.*。/] if [ 'ja', 'zh' ].include?(lang)
     text = doc.css('p').text[/.*is.*\./] if text.nil?
     text = doc.css('p').text[/.*was.*\./] if text.nil?
