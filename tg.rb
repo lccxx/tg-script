@@ -27,7 +27,7 @@ class Tg
   STICKERS_START = [ '0500000080b97056e0020000000000004b04bccd8bf722a0',
                     '0500000080b97056c5020000000000004b04bccd8bf722a0' ]
 
-  WIKI_API_PREFIX = 'https://en.wikipedia.org/w/api.php?'
+  WIKI_API_PREFIX = 'wikipedia.org/w/api.php?'
 
 
   def initialize
@@ -255,9 +255,11 @@ class Tg
 
   def process_wiki(group)
     msg = @groups[group].last if @groups[group]
-    title = msg['text'][/^\/wiki@lccxz(.*)/, 1] if msg && msg['text']
-    return false if title.nil?
+    lang = msg['text'][/^\/(.{0,2})wiki@lccxz/, 1] if msg && msg['text']
+    title = msg['text'][/wiki@lccxz(.*)$/, 1] if msg && msg['text']
+    return false if lang.nil? || title.nil?
 
+    lang = 'en' if lang.length == 0
     title = title.strip
     if title.length == 0
       params = { action: 'query', list: 'random', rnnamespace: 0, format: 'json' }
@@ -266,11 +268,15 @@ class Tg
     end
  
     params = { action: 'parse', page: title, format: 'json' }
-    res = JSON.parse Net::HTTP.get URI "#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
+    res = JSON.parse Net::HTTP.get URI "https://#{lang}.#{WIKI_API_PREFIX}#{URI.encode_www_form params}"
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     doc = Nokogiri::HTML(res['parse']['text']['*'])
     text = doc.css('p').text[/.*is.*\./]
     text = doc.css('p').text[/.*was.*\./] if text.nil?
+    text = doc.css('p').text[/.*\./] if text.nil?
+    text = doc.css('p').text[/.*。/] if text.nil?
+    text = doc.css('p').text if text.nil?
+    text = doc.css('ul').text if text.nil?
     text = doc.text if text.nil?
     text = text.gsub(/\[\d+\]/, '') if text
     text = "#{text[0..4091]} ..." if text.length > 4096
