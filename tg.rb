@@ -260,7 +260,7 @@ class Tg
     return false if lang.nil? || title.nil?
 
     lang = 'en' if lang.length == 0
-    title = title.strip
+    title = title.strip.sub('@lccxz', '')
     doc = nil
     url_prefix = "https://#{lang}.#{WIKI_API_PREFIX}"
     loop {
