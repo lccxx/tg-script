@@ -140,7 +140,7 @@ class Tg
     player_count_reg = /#players: (\d+)/
     player_count_r_reg = /在最近30秒内加入了游戏/
     player_count_f_reg = /还剩 (\d+) 名玩家。/
-    cancel_reg = /游戏取消/
+    cancel_reg = /游戏取消|目前没有进行中的游戏/
 
     extend_count = 0
     last_extend_at = Time.at(0)
