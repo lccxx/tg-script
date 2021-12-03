@@ -272,6 +272,7 @@ class Tg
   
       params = { action: 'parse', page: title, format: 'json' }
       res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
+      send_msg(group, res['error']['info']) if res['error'] && res['error']['info']
       return false if res['parse'].nil?
 
       doc = Nokogiri::HTML(res['parse']['text']['*'])
