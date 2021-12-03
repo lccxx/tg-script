@@ -269,8 +269,7 @@ class Tg
     end
  
     params = { action: 'parse', page: title, format: 'json' }
-    res = JSON.parse Net::HTTP.get URI "#{url_prefix}}#{URI.encode_www_form params}"
-    tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
+    res = JSON.parse Net::HTTP.get URI "#{url_prefix}#{URI.encode_www_form params}"
     doc = Nokogiri::HTML(res['parse']['text']['*'])
     text = doc.css('p').text[/.*is.*\./]
     text = doc.css('p').text[/.*was.*\./] if text.nil?
@@ -281,6 +280,7 @@ class Tg
     text = doc.text if text.nil?
     text = text.gsub(/\[\d+\]/, '') if text
     text = "#{text[0..4091]} ..." if text.length > 4096
+    tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     File.write(tmp_text_file, text)
     @stdin << "send_text #{group} #{tmp_text_file}\n"
     @tasks_queue[@tasks_counter] = proc { File.delete tmp_text_file }
