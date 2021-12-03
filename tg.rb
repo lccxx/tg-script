@@ -294,7 +294,7 @@ class Tg
     text = doc.text if text.nil?
     text = text.gsub(/\[\d+\]/, '') if text
     note = doc.css('div.hatnote[role="note"]').first
-    text = "#{text}\nnote: #{note.text}" if note
+    text = "#{text.strip}\n\nnote: #{note.text}" if note
     text = "#{text[0..4091]} ..." if text.length > 4096
     tmp_text_file = "/tmp/tg-send-file-#{Time.now.to_f}.txt"
     File.write(tmp_text_file, text)
