@@ -277,6 +277,7 @@ class Tg
       doc = Nokogiri::HTML(res['parse']['text']['*'])
 
       redirectMsg = doc.css('div.redirectMsg a:first').attr('title')
+      redirectMsg = doc.css('div.selfreference a:first').attr('title') if redirectMsg.nil?
       break if redirectMsg.nil?
 
       title = redirectMsg.to_s
